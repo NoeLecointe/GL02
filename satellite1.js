@@ -4,4 +4,3 @@ var satellite1 = {
         return true
     }
 }
-module.exports = satellite1;
