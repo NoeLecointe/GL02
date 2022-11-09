@@ -5,3 +5,4 @@ var satellite1 = {
     }
 }
 module.exports = satellite1;
+console.log("Blue level checked".blue)

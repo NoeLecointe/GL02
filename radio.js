@@ -4,3 +4,4 @@ var radio = {
         return true
     }
 }
+console.log("Blue level checked".blue)
