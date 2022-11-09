@@ -6,3 +6,4 @@ var Engine = {
 }
 module.exports = Engine
 
+console.log("Blue level checked".blue);
