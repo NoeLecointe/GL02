@@ -4,3 +4,5 @@ var satellite1 = {
         return true
     }
 }
+
+console.log("Blue level checked".blue)
