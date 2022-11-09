@@ -1,8 +1,8 @@
 var Command = {
-check: function(){
-console.log("Command Ready !")
-return true
-}
-}
-module.exports = Command
-console.log("Blue level checked".blue);
+  check: function () {
+    console.log("Blue level checked".blue);
+    console.log("Command Ready !");
+    return true;
+  },
+};
+module.exports = Command;
