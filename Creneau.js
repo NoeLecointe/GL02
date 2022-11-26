@@ -1,11 +1,10 @@
 class Creneau {
-    constructor(idCOurs,type,place,horaire,sousGroupe){
-        this.idCours = idCOurs;
+    constructor(nomUE,type,place,sousGroupe){
+        this.nomUE = nomUE;
         this.type = type;
         this.place = place;
-        this.horaire = horaire;
         this.sousGroupe = sousGroupe;
     }
 }
 
-export default Creneau;
+module.exports = Creneau;
