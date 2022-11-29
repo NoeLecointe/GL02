@@ -62,6 +62,9 @@ class Actions{
         }
         })
     }
+    static actionCapacity = function({logger, args}){
+        console.log("test");
+    }
 }
 
 module.exports = Actions;
