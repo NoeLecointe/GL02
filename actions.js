@@ -2,7 +2,28 @@ const fs = require('fs');
 const parserUeSalle = require('./parserUeSalle.js');
 const parserGeneral = require('./Parser.js');
 const path = require('path');
+
+
+
 class Actions{
+
+    static parseAll = function(parser) {
+        const directoryPath = path.join('.','SujetA_data');
+        let listpath;
+        let allData;
+
+        listpath = fs.readdirSync(directoryPath, function (err, listpath) {
+            if (err) {
+                return console.log("Unable to find capacity "+ err);
+            } 
+        })
+        listpath.forEach(function (data) {
+            allData += fs.readFileSync('./SujetA_data/'+data+'/edt.cru','utf8');
+        })
+        parser.parse(allData);
+    }
+
+
     static actionUeSalle = function({logger, args}){
         let pathdata;
         const firstLetter = String(args.ue).substring(0,1);
@@ -64,6 +85,7 @@ class Actions{
         }
         })
     }
+
     static actionCapacity = function({logger, args}){
         let allData;
         const directoryPath = path.join('.','SujetA_data');
