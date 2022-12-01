@@ -1,26 +1,26 @@
 var parser = function(){
-    this.uesearched;
-    this.symb = ["+","P=","H=","S=","//"];
+    this.searched;
 };
 
-
-
-parser.prototype.parse = function(data, uename){
-	var tData = this.getlistue(data);
-	var ue = tData.filter((val) => val.match(uename));
-	this.uesearched = ue[0];
+parser.prototype.parse = function(data, name, spec){
+	var tData = this.getlist(data, spec);
+	var target = tData.filter((val) => val.match(name));
+	if (spec === 2){
+		this.searched = target[0];
+	} else {
+		this.searched = target;
+	}
 };
 
-parser.prototype.getlistue = function(data){
-	var separator = /\+/;
-	data = data.split(separator);
-	//data = data.filter((val) => !val.match(separator)); 					
+parser.prototype.getlist = function(data, spec){
+	var separator;
+	if (spec === 2){
+		separator = /\+/;
+	} else {
+		separator = /\/\//;
+	}
+	data = data.split(separator);					
 	return data;
 };
-
-//parser.prototype.selectue = function(uename){
-//	var ue = this.listroom.filter((val) => val.match(uename)); 
-//	return ue[0];
-//};
 
 module.exports = parser;
