@@ -14,7 +14,7 @@ class Actions{
 
         listpath = fs.readdirSync(directoryPath, function (err, listpath) {
             if (err) {
-                return console.log("Unable to find capacity "+ err);
+                return console.log("Unable to find path : "+ err);
             } 
         })
         listpath.forEach(function (data) {
@@ -105,7 +105,7 @@ class Actions{
             let capacity = 0;
             let stringcap;
             if (typeof analyzer2.searched[0] === 'undefined'){ 
-                console.log("Room not found on the data base or wrong syntax for the name of the room");
+                console.log("Room not found on the data base or wrong syntax for the name of the room, please write the room name with uppercase");
             } else {
                 analyzer2.searched.forEach(function(cap) {
                     stringcap = cap.match(expressioncapacity);
@@ -115,8 +115,18 @@ class Actions{
                 logger.info("The max capacity of the room %s is %s", args.room, String(capacity));
             }
     } else {
-        console.log("Room not found because of wrong syntax for the name of the room");
+        console.log("Room not found because of wrong syntax for the name of the room, please write the room name with uppercase");
     }});
+    }
+
+    static actionManual = function({logger, args}){
+        fs.readFile("./README.txt", 'utf8', function(err, data){
+			if(err){
+				return logger.warn("Unable to find manual : "+ err);
+			}
+			
+			logger.info(data);
+		});
     }
 }
 
