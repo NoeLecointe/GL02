@@ -1,13 +1,14 @@
 const Salle = require("./Salle");
 const Creneau = require('./Creneau.js');
 
+
+
 class Parser{
     constructor(){
         this.listeSalle = [];
         this.cptErreur;
     }
 
-    // this.listeSalle[3] 
 
     splitAndFilter = function(data){
         
@@ -69,12 +70,10 @@ class Parser{
         let nomSalle = valeurCreneau.shift();
         nomSalle = nomSalle.replace("S=","");
         let salle;
-        if(!this.verifSalle(salle)){
+        salle = this.listeSalle.find((val) => val.nomSalle == nomSalle);
+        if(salle == undefined){
             salle = new Salle(nomSalle);
             this.listeSalle.push(salle);
-        }
-        else{
-            salle = this.listeSalle.find((val) => val.nomSalle == nomSalle);
         }
         salle.addCreneau(jour,debut,fin,creneau);
         while(valeurCreneau.length > 0){
@@ -88,24 +87,13 @@ class Parser{
             creneau = new Creneau(nomUE,typeCours,place,sousGroupe);
             let nomSalle = valeurCreneau.shift();
             nomSalle = nomSalle.replace("S=","");
-            if(!this.verifSalle(salle)){
+            salle = this.listeSalle.find((val) => val.nomSalle == nomSalle);
+            if(salle == undefined){
                 salle = new Salle(nomSalle);
-            }
-            else{
-                salle = this.listeSalle.find((val) => val.nomSalle == nomSalle);
+                this.listeSalle.push(salle);
             }
             salle.addCreneau(jour,debut,fin,creneau);
         }
-    }
-
-    verifSalle = function(nomUE){
-        let notFound = false;
-        let i = 0;
-        while(!notFound && i< this.listeSalle.length){
-            notFound = this.listeSalle[i].nomSalle == nomUE;
-            i++;
-        }
-        return notFound;  
     }
 }
 
