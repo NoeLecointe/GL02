@@ -14,6 +14,6 @@ program
 .action(Actions.actionCapacity)
 .command("getman", "Get acces on the manual of command")
 .action(Actions.actionManual)
-.command("test","test of parseAll")
+.command("makeiCalendar","Return a iCalendar file")
 .action(Actions.actionIcalendar);
 program.run();

@@ -25,56 +25,11 @@ class Actions{
         parser.parse(allData);
     }
 
-    static test = function(){
-        let parser = new parserGeneral();
-        Actions.parseAll(parser);
-        // console.log(parser.listeSalle[0]);
-
-        let UE = ["GL02", "IF37"];
-        let tabUE = [];
-        let indice;
-        let nomSalle;
-        let jour;
-        let heureD;
-        let heureF;
-        let horaire;
-        let nomUE;
-        parser.listeSalle.forEach(salle => {
-            nomSalle = salle.nomSalle;
-
-            salle.agenda.forEach((day, j)  => {
-                jour = j;
-
-                day.forEach((creneau, h) => {
-                    heureD = h;
-                    heureF = h;
-                    if(creneau !== undefined) {
-                        if (UE.includes(creneau.nomUE)) {
-                            nomUE = creneau.nomUE;
-                            horaire = {nomUE, nomSalle, jour, heureD, heureF};
-                            indice = tabUE.length;
-                            if (indice === 0) {
-                                    tabUE.push(horaire);        
-                            } else {
-                                for (let i = 0; i < indice; i++) {
-                                    // console.log("UE "+horaire.heureD+" tab "+tabUE[i].heureD);
-                                    if (tabUE[i].nomUE === horaire.nomUE && tabUE[i].nomSalle === horaire.nomSalle && tabUE[i].jour === horaire.jour) {
-                                        tabUE[i].heureF++;
-                                    } else {
-                                        tabUE.push(horaire);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                })
-            });
-        })
-        console.log(tabUE);
-    }
-
     static actionIcalendar = function({logger, args}){
         (async () => {
+            let parser = new parserGeneral();
+            Actions.parseAll(parser);
+
             const verifDate = /(?:0[1-9]|[12][0-9]|3[01])\/(?:0[1-9]|1[012])\/202[2-9]{1}/;
             const verifUE = /[A-Z]{2,10}[0-9]{0,2}[A-Z]{0,1}[0-9]{0,1}/;
             const response = await prompts ([
@@ -98,27 +53,80 @@ class Actions{
                 }
             ]);
 
+            let tabUE = [];
+            let creneau = [];
+            let objCreneau;
+            let horaire;
+            let indice;
+            let nomUE;
+            let nomSalle;
+            let jour;
+            let heureD;
+            let heureF;
+            parser.listeSalle.forEach(salle => {
+                nomSalle = salle.nomSalle;
 
-            keep(response);
-           
-           
-            async function keep(response) {
-                console.log(response);
+                salle.agenda.forEach((day, j)  => {
+                    jour = j;
 
-                const response2 = await prompts ([
-                    {
-                        type : 'text',
-                        name : 'test',
-                        message : "rentrer la date de début (DD/MM/YYYY)",
-                    }
-                ]);
+                    day.forEach((c, h) => {
+                        heureD = h;
+                        heureF = h+1;
+                        if(c !== undefined) {
+                            if (response.UE.includes(c.nomUE)) {
+                                nomUE = c.nomUE;
+                                creneau = [];
+                                objCreneau = {nomSalle, jour, heureD, heureF};
+                                let objCreneauValue = Object.values(objCreneau);
+                                horaire = {nomUE, creneau};
+
+                                const exist = (e) => e.nomUE === horaire.nomUE;
+                                indice = tabUE.findIndex(exist);
+                                // console.log(indice);
+
+                                if (tabUE.length === 0) {
+                                    tabUE.push(horaire);
+                                    tabUE[0].creneau.push(objCreneau); 
+                                } else if (tabUE.some(exist)) {
+                                    // console.log('exist');
+                                    const verifCreneau = (e) => e.nomSalle === objCreneauValue[0] && e.jour === objCreneauValue[1] && e.heureF === objCreneauValue[2];
+                                    let indiceCreneau = tabUE[indice].creneau.findIndex(verifCreneau);
+
+                                    if (tabUE[indice].creneau.some(verifCreneau)) {
+                                        tabUE[indice].creneau[indiceCreneau].heureF++;
+                                    } else {
+                                        tabUE[indice].creneau.push(objCreneau);
+                                    }
+
+                                } else {
+                                    tabUE.push(horaire);
+                                    indice = tabUE.length - 1;
+                                    tabUE[indice].creneau.push(objCreneau);
+                                }
+                            }
+                        }
+                    })
+                });
+            })
+
+            keep(tabUE, response.dateD, response.dateF);
+
+
+            async function keep(tabUE, dateD, dateF) {
+                // console.log(response);
+                console.log(dateD + " " + dateF);
+                tabUE.forEach(UE => {
+                    console.log(UE);
+                });
+            //     const response2 = await prompts ([
+            //         {
+            //             type : 'text',
+            //             name : 'test',
+            //             message : "rentrer la date de début (DD/MM/YYYY)",
+            //         }
+            //     ]);
             };
-            
-
-            // console.log(response);
         })();
-
-
     }
     
     static actionUeSalle = function({logger, args}){
