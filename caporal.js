@@ -13,5 +13,7 @@ program
 .argument("<room>","Name of the room")
 .action(Actions.actionCapacity)
 .command("getman", "Get acces on the manual of command")
-.action(Actions.actionManual);
+.action(Actions.actionManual)
+.command("test","test of parseAll")
+.action(Actions.actionIcalendar);
 program.run();
