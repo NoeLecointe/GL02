@@ -31,9 +31,9 @@
      * in the right day tab.
      * for exemple if we got jour = MA, debut = 13:00, fin = 14h30
      * Then we will add the creneau in all cell between Array[1][26] and Array[1][29]
-     * @param  {String} jour
-     * @param  {String} debut
-     * @param  {String} fin
+     * @param  {String} jour format  = /L|MA|ME|J|V|S|D/
+     * @param  {String} debut format = "<hours>:<minutes"
+     * @param  {String} fin format = "<hours>:<minutes"
      * @param  {Creneau} creneau
      */
     addCreneau = function(jour, debut, fin, creneau){
@@ -69,11 +69,21 @@
         let indiceDebut = this.calculHeurIndice(debut);
         let indiceFin = this.calculHeurIndice(fin);
         // add creneau to all cell of our array between the starting hours of the classes to the end of it
+        let dispo = true;
         for(let i = indiceDebut; i< indiceFin; i++){
-            this.agenda[indiceJour][i] = creneau;
+            if(this.agenda[indiceJour][i] != undefined){
+                dispo = false;
+                break;
+            }
         }
+        if(dispo){
+            for(let i = indiceDebut; i< indiceFin; i++){
+                this.agenda[indiceJour][i] = creneau;
+            }
+        }
+
+        
     }
 }
-
 
 module.exports = Salle;
