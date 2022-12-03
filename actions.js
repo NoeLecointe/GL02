@@ -4,6 +4,9 @@ const parserGeneral = require('./Parser.js');
 const path = require('path');
 
 const prompts = require('prompts');
+const ical = require('ical-generator');
+const http = require('http');
+const open = require('open');
 
 
 
@@ -36,22 +39,22 @@ class Actions{
             const verifUE = /[A-Z]{2,10}[0-9]{0,2}[A-Z]{0,1}[0-9]{0,1}/;
             //Demande à l'utilisateur de rentrer la date de début, de fin et les UE auxquels il participe.
             const response = await prompts ([
-                // {
-                //     type : 'text',
-                //     name : 'dateD',
-                //     message : "rentrer la date de début (DD/MM/YYYY)",
-                //     validate : dateD => !dateD.match(verifDate) ? "date pas bonne" : true
-                // },
-                // {
-                //     type : 'text',
-                //     name : 'dateF',
-                //     message : "rentrer la date de fin (DD/MM/YYY)",
-                //     validate : dateD => !dateD.match(verifDate) ? "date pas bonne" : true
-                // },
+                {
+                    type : 'text',
+                    name : 'dateDebut',
+                    message : "rentrer la date de début (DD/MM/YYYY)",
+                    validate : dateDebut => !dateDebut.match(verifDate) ? "date pas bonne" : true
+                },
+                {
+                    type : 'text',
+                    name : 'dateFin',
+                    message : "rentrer la date de fin (DD/MM/YYY)",
+                    validate : dateFin => !dateFin.match(verifDate) ? "date pas bonne" : true
+                },
                 {
                     type : 'list',
                     name : 'UE',
-                    message : 'entrer vos UE séparées par une ","',
+                    message : 'entrer vos UE (en majuscule) séparées par une ","',
                     separator : ','
                 }
             ]);
@@ -165,13 +168,26 @@ class Actions{
                         c.heureD -= 0.20;
                     }
                     c.heureF = c.heureF/2;
-                    if (c.heureF%2 === 0.5) {
+                    if (c.heureF%1 === 0.5) {
                         c.heureF -= 0.20;
                     }
                 });
             });
 
-            // console.log(response.dateD, response.dateF);
+            //Récupère les dates rentrées par l'utilisateur et les mets au format Date de javascript
+            const splitDate = /\//;
+            response.dateDebut = response.dateDebut.split(splitDate);
+            let jourD = response.dateDebut.shift();
+            let moisD = response.dateDebut.shift()-1;
+            let anneeD = response.dateDebut.shift();
+            let dateDebut = new Date(anneeD, moisD, jourD);
+            response.dateFin = response.dateFin.split(splitDate);
+            let jourF = response.dateFin.shift();
+            let moisF = response.dateFin.shift()-1;
+            let anneeF = response.dateFin.shift();
+            let dateFin = new Date(anneeF, moisF, jourF);
+            let jourFin = dateFin.getDate()
+            dateFin.setDate(jourFin+1);
 
 
             let arrayChoice = [];
@@ -213,42 +229,147 @@ class Actions{
                 tabUE.forEach((e, i) => {
                     let tabSelect = [];
                     e.creneau.forEach((c, y) => {
-                            if(cre[i].includes(y)) {
-                                tabSelect.push(c);
-                            };
+                        if(cre[i].includes(y)) {
+                            let heureD = new Date(dateDebut);
+                            heureD.setHours(c.heureD);
+                            if (c.heureD%1 > 0) {
+                                heureD.setMinutes(30);
+                            }
+                            c.heureD = heureD;
+                            
+                            let heureF = new Date(dateDebut);
+                            heureF.setHours(c.heureF);
+                            if (c.heureF%1 > 0) {
+                                heureF.setMinutes(30);
+                            }
+                            c.heureF = heureF;
+                            tabSelect.push(c);
+                        };
                     });
-                    // console.log(tabSelect);
                     tabIcalendar[i].creneau = tabSelect;
                 });
 
+                
+                let nomJourDebut = getDayOfWeek(dateDebut);
+                const calendar = ical({name : 'agenda UE'});
 
 
+                tabIcalendar.forEach(ical => {
+                    let nomUE = ical.nomUE;
 
-                // const splitDate = /\//;
-                // response.dateD = response.dateD.split(splitDate);
-                // let jourD = response.dateD.shift();
-                // let moisD = response.dateD.shift();
-                // let anneeD = response.dateD.shift();
-                // let dateD = new Date(anneeD, moisD, jourD);
-                // response.dateF = response.dateF.split(splitDate);
-                // let jourF = response.dateF.shift();
-                // let moisF = response.dateF.shift();
-                // let anneeF = response.dateF.shift();
-                // let dateF = new Date(anneeF, moisF, jourF);
+                    ical.creneau.forEach(c => {                      
+                        while (dateDebut < c.heureD && c.heureD < dateFin) {
+                            switch (c.jour) {
+                                case "Lundi":
+                                    if (nomJourDebut === 'lundi') {
+                                        nomJourDebut = "";
+                                        creationEvent(c.heureD, c.heureF, c.typeCours, nomUE, c.nomSalle);
+                                    } else {
+                                        let j = c.jour.toLowerCase();
+                                        caseJour(j, c.heureD, c.heureF, c.typeCours, nomUE, c.nomSalle);
+                                    }
+                                    break;
+                                case "Mardi":
+                                    if (nomJourDebut === 'mardi') {
+                                        nomJourDebut = "";
+                                        creationEvent(c.heureD, c.heureF, c.typeCours, nomUE, c.nomSalle);
+                                    } else {
+                                        let j = c.jour.toLowerCase();
+                                        caseJour(j, c.heureD, c.heureF, c.typeCours, nomUE, c.nomSalle);
+                                    }
+                                    break;
+                                case "Mercredi":
+                                    if (nomJourDebut === 'mercredi') {
+                                        nomJourDebut = "";
+                                        creationEvent(c.heureD, c.heureF, c.typeCours, nomUE, c.nomSalle);
+                                    } else {
+                                        let j = c.jour.toLowerCase();
+                                        caseJour(j, c.heureD, c.heureF, c.typeCours, nomUE, c.nomSalle);
+                                    }
+                                    break;
+                                case "Jeudi":
+                                    if (nomJourDebut === 'jeudi') {
+                                        nomJourDebut = "";
+                                        creationEvent(c.heureD, c.heureF, c.typeCours, nomUE, c.nomSalle);
+                                    } else {
+                                        let j = c.jour.toLowerCase();
+                                        caseJour(j, c.heureD, c.heureF, c.typeCours, nomUE, c.nomSalle);
+                                    }
+                                    break;
+                                case "Vendredi":
+                                    if (nomJourDebut === 'vendredi') {
+                                        nomJourDebut = "";
+                                        creationEvent(c.heureD, c.heureF, c.typeCours, nomUE, c.nomSalle);
+                                    } else {
+                                        let j = c.jour.toLowerCase();
+                                        caseJour(j, c.heureD, c.heureF, c.typeCours, nomUE, c.nomSalle);
+                                    }
+                                    break;
+                                case "Samedi":
+                                    if (nomJourDebut === 'vendredi') {
+                                        nomJourDebut = "";
+                                        creationEvent(c.heureD, c.heureF, c.typeCours, nomUE, c.nomSalle);
+                                    } else {
+                                        let j = c.jour.toLowerCase();
+                                        caseJour(j, c.heureD, c.heureF, c.typeCours, nomUE, c.nomSalle);
+                                    }
+                                    break;
+                                case "Dimanche":
+                                    if (nomJourDebut === 'dimanche') {
+                                        nomJourDebut = "";
+                                        creationEvent(c.heureD, c.heureF, c.typeCours, nomUE, c.nomSalle);
+                                    } else {
+                                        let j = c.jour.toLowerCase();
+                                        caseJour(j, c.heureD, c.heureF, c.typeCours, nomUE, c.nomSalle);
+                                    }
+                                    break;
+                            }
+                        };
+                    });
+                });  
 
-                // function getMonday(d) {
-                //     d = new Date(d);
-                //     var day = d.getDay(),
-                //         diff = d.getDate() - day + (day == 0 ? -6:1); // adjust when day is sunday
-                //     return new Date(d.setDate(diff));
-                //   }
-                  
-                // let d = getMonday(new Date());
-                // d.setDate(d.getDate() + 2);
-                // d.setHours(13);
-                // d.setMinutes(30);
-                // d.setSeconds(0);
-            
+                function getDayOfWeek(d) {
+                    d = new Date(d).toLocaleDateString('default', {weekday : 'long'});
+                    return d;
+                }
+
+                function creationEvent(depart, fin, type, nom, salle) {
+                    calendar.createEvent({
+                        start : depart,
+                        end : fin,
+                        summary : type+' de '+nom,
+                        desciption : type+" de "+nom+" le Lundi",
+                        localisation : salle
+                    })
+                }
+
+                function caseJour(jour, depart, fin, type, nom, salle) {
+                    let dDebut = new Date(depart.toString());
+                    let dFin = new Date(fin.toString());
+                    let d;
+                    while (getDayOfWeek(depart) !== jour) {
+                        d = dDebut.getDate();
+                        dDebut.setDate(d + 1);
+                        dFin.setDate(d + 1);
+                        depart.setDate(d + 1);
+                        fin.setDate(d + 1);
+                    }
+                    d = dDebut.getDate();
+                    
+                    if (dDebut < dateFin) {
+                        creationEvent(dDebut, dFin, type, nom, salle);
+                    }
+
+
+                    depart.setDate(d + 7);
+                    fin.setDate(d + 7);
+                }
+
+                http.createServer((req, res) => calendar.serve(res))
+                    .listen(3000, '127.0.0.1', () => {
+                        console.log('Server running at http://127.0.0.1:3000/');
+                        open('http://127.0.0.1:3000/');
+                    });
             }
         })();
     }
