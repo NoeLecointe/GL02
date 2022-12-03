@@ -30,25 +30,28 @@ class Actions{
             let parser = new parserGeneral();
             Actions.parseAll(parser);
 
+            //Regex pour vérifier si la date est conforme
             const verifDate = /(?:0[1-9]|[12][0-9]|3[01])\/(?:0[1-9]|1[012])\/202[2-9]{1}/;
+            //Regex qui vérifie si l'ue rentrée est conforme
             const verifUE = /[A-Z]{2,10}[0-9]{0,2}[A-Z]{0,1}[0-9]{0,1}/;
+            //Demande à l'utilisateur de rentrer la date de début, de fin et les UE auxquels il participe.
             const response = await prompts ([
-                {
-                    type : 'text',
-                    name : 'dateD',
-                    message : "rentrer la date de début (DD/MM/YYYY)",
-                    validate : dateD => !dateD.match(verifDate) ? "date pas bonne" : true
-                },
-                {
-                    type : 'text',
-                    name : 'dateF',
-                    message : "rentrer la date de fin (DD/MM/YYY)",
-                    validate : dateD => !dateD.match(verifDate) ? "date pas bonne" : true
-                },
+                // {
+                //     type : 'text',
+                //     name : 'dateD',
+                //     message : "rentrer la date de début (DD/MM/YYYY)",
+                //     validate : dateD => !dateD.match(verifDate) ? "date pas bonne" : true
+                // },
+                // {
+                //     type : 'text',
+                //     name : 'dateF',
+                //     message : "rentrer la date de fin (DD/MM/YYY)",
+                //     validate : dateD => !dateD.match(verifDate) ? "date pas bonne" : true
+                // },
                 {
                     type : 'list',
                     name : 'UE',
-                    message : 'entrer vos UE séparé par une ","',
+                    message : 'entrer vos UE séparées par une ","',
                     separator : ','
                 }
             ]);
@@ -59,46 +62,92 @@ class Actions{
             let horaire;
             let indice;
             let nomUE;
+            let typeCours;
             let nomSalle;
             let jour;
             let heureD;
             let heureF;
+            //Récupère les informations dont on a besoin en fonction des UE rentrés par l'utilisateur.
             parser.listeSalle.forEach(salle => {
+                //Stoque le nom de la salle
                 nomSalle = salle.nomSalle;
 
                 salle.agenda.forEach((day, j)  => {
-                    jour = j;
+                    //Permet de récupérer le jour en fonction de l'indice du tableau
+                    switch (j) {
+                        case 0 : 
+                            jour = "Lundi";
+                            break;
+                        case 1 : 
+                            jour = "Mardi";
+                            break;
+                        case 2 : 
+                            jour = "Mercredi";
+                            break;
+                        case 3 : 
+                            jour = "Jeudi";
+                            break;
+                        case 4 : 
+                            jour = "Vendredi";
+                            break;
+                        case 5 : 
+                            jour = "Samedi";
+                            break;
+                        case 6 : 
+                            jour = "Dimanche";
+                            break;
+                    }
 
                     day.forEach((c, h) => {
+                        //Stocke les heures de début et de fin
                         heureD = h;
                         heureF = h+1;
                         if(c !== undefined) {
                             if (response.UE.includes(c.nomUE)) {
+                                typeCours = c.type;
+                                if (typeCours.includes("C")) {
+                                    typeCours = "CM";
+                                } else if (typeCours.includes("T")) {
+                                    typeCours = "TP";
+                                } else {
+                                    typeCours = "TD";
+                                }
                                 nomUE = c.nomUE;
                                 creneau = [];
-                                objCreneau = {nomSalle, jour, heureD, heureF};
-                                let objCreneauValue = Object.values(objCreneau);
+                                //création d'un objet avec le nom de la salle, le jour, heure de début et de fin
+                                objCreneau = {nomSalle, jour, heureD, heureF, typeCours};
+                                //Object horaire qui stock le nom de l'ue et un tableau de créneau.
                                 horaire = {nomUE, creneau};
 
+                                //test qui vérifie si l'UE est déjà présent l'object horaire.
                                 const exist = (e) => e.nomUE === horaire.nomUE;
+                                //Récupère l'indice où l'UE est stocké si jamais ce dernier est retrouvé.
                                 indice = tabUE.findIndex(exist);
                                 // console.log(indice);
-
+                                
+                                //Initialisation, si tabUE est vide, remplie automatiquement avec les premières données.
                                 if (tabUE.length === 0) {
                                     tabUE.push(horaire);
                                     tabUE[0].creneau.push(objCreneau); 
+                                //Vérifie si l'ue qu'on est en train de traiter existe déjà dans le tableau tabUE
                                 } else if (tabUE.some(exist)) {
                                     // console.log('exist');
-                                    const verifCreneau = (e) => e.nomSalle === objCreneauValue[0] && e.jour === objCreneauValue[1] && e.heureF === objCreneauValue[2];
+                                    //test afin de voir si le créneau correspond
+                                    const verifCreneau = (e) => e.nomSalle === objCreneau.nomSalle && e.jour === objCreneau.jour && e.heureF === objCreneau.heureD;
+                                    //récupère l'indice du créneau correspondant si ce dernier existe.
                                     let indiceCreneau = tabUE[indice].creneau.findIndex(verifCreneau);
-
+                                    
+                                    //si le créneau existe
                                     if (tabUE[indice].creneau.some(verifCreneau)) {
+                                        //ajoute une demi heure à l'heure de fin (les heures étant en 1/2 heure)
                                         tabUE[indice].creneau[indiceCreneau].heureF++;
                                     } else {
+                                        //Sinon, push le nouveau créneau dans l'UE
                                         tabUE[indice].creneau.push(objCreneau);
                                     }
-
+                                //Si l'UE recherché n'existe pas
                                 } else {
+                                    //Push les nouvelles données.
                                     tabUE.push(horaire);
                                     indice = tabUE.length - 1;
                                     tabUE[indice].creneau.push(objCreneau);
@@ -108,27 +157,102 @@ class Actions{
                     })
                 });
             })
-
-            keep(tabUE, response.dateD, response.dateF);
-
-
-            async function keep(tabUE, dateD, dateF) {
-                // console.log(response);
-                console.log(dateD + " " + dateF);
-                tabUE.forEach(UE => {
-                    console.log(UE);
+            //passage des heures de début et de fin de 1/2h à des heures.
+            tabUE.forEach(ue => {
+                ue.creneau.forEach(c => {
+                    c.heureD = c.heureD/2;
+                    if (c.heureD%1 === 0.5) {
+                        c.heureD -= 0.20;
+                    }
+                    c.heureF = c.heureF/2;
+                    if (c.heureF%2 === 0.5) {
+                        c.heureF -= 0.20;
+                    }
                 });
-            //     const response2 = await prompts ([
-            //         {
-            //             type : 'text',
-            //             name : 'test',
-            //             message : "rentrer la date de début (DD/MM/YYYY)",
-            //         }
-            //     ]);
-            };
+            });
+
+            // console.log(response.dateD, response.dateF);
+
+
+            let arrayChoice = [];
+            let arrayNom = [];
+            tabUE.forEach(e => {
+                let arrayUE = [];
+                arrayNom.push(e.nomUE);
+                e.creneau.forEach((c, i) => {
+                    let title = c.typeCours+ " en salle : "+c.nomSalle+" le "+c.jour+" de "+c.heureD+"h a "+c.heureF+"h";
+                    let value = i;
+                    let objChoice = {title, value};
+                    arrayUE.push(objChoice);
+                });
+                arrayChoice.push(arrayUE);
+            });
+
+            askCreneau(arrayChoice, arrayNom);
+
+            //Demande à l'utilisateur de choisir les créneaux auxquels il participe.
+            async function askCreneau(arrayChoice, nom) {
+                let multi = [];
+                let type = 'multiselect';
+                let name;
+                let message = "Choisir les créneaux auxquels vous participez pour le cours ";
+                let choices;
+                arrayChoice.forEach((e, i) => {
+                    let select = {type, name, message, choices};
+                    select.name = nom[i];
+                    select.message += nom[i];
+                    select.choices = e;
+                    multi.push(select);
+                });
+                const response2 = await prompts (multi);            
+                
+
+                //Fait le trie dans les créneaux des UE en gardant seulement ceux sélectionner par l'utilisateur
+                let cre = Object.values(response2); 
+                let tabIcalendar = tabUE;
+                tabUE.forEach((e, i) => {
+                    let tabSelect = [];
+                    e.creneau.forEach((c, y) => {
+                            if(cre[i].includes(y)) {
+                                tabSelect.push(c);
+                            };
+                    });
+                    // console.log(tabSelect);
+                    tabIcalendar[i].creneau = tabSelect;
+                });
+
+
+
+
+                // const splitDate = /\//;
+                // response.dateD = response.dateD.split(splitDate);
+                // let jourD = response.dateD.shift();
+                // let moisD = response.dateD.shift();
+                // let anneeD = response.dateD.shift();
+                // let dateD = new Date(anneeD, moisD, jourD);
+                // response.dateF = response.dateF.split(splitDate);
+                // let jourF = response.dateF.shift();
+                // let moisF = response.dateF.shift();
+                // let anneeF = response.dateF.shift();
+                // let dateF = new Date(anneeF, moisF, jourF);
+
+                // function getMonday(d) {
+                //     d = new Date(d);
+                //     var day = d.getDay(),
+                //         diff = d.getDate() - day + (day == 0 ? -6:1); // adjust when day is sunday
+                //     return new Date(d.setDate(diff));
+                //   }
+                  
+                // let d = getMonday(new Date());
+                // d.setDate(d.getDate() + 2);
+                // d.setHours(13);
+                // d.setMinutes(30);
+                // d.setSeconds(0);
+            
+            }
         })();
     }
-    
+
     static actionUeSalle = function({logger, args}){
         let pathdata;
         const firstLetter = String(args.ue).substring(0,1);
