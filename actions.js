@@ -12,6 +12,11 @@ const open = require('open');
 
 class Actions{
 
+
+    /**
+     * give back all the date get from the parser
+     * @param {Parser} parser 
+     */
     static parseAll = function(parser) {
         const directoryPath = path.join('.','SujetA_data');
         let listpath;
@@ -32,10 +37,9 @@ class Actions{
     /**
      * function that ask the user for informations and give back a ics file.
      * Open a window for the download.
-     * @param no param 
      */
 
-    static actionIcalendar = function(){
+    static actionIcalendar = function({logger, args}){
         /**
          * Asynchrone function that allow to use await operator to wait the fulfillment of the prompts.
          */
@@ -44,16 +48,31 @@ class Actions{
             Actions.parseAll(parser);
 
             //Regex for the verification of the date enter by the user
-            const verifDate = /(?:0[1-9]|[12][0-9]|3[01])\/(?:0[1-9]|1[012])\/202[2-9]{1}/;
+            const verifDate = /(?:0[1-9]|[12][0-9]|3[01])\/(?:0[1-9]|1[012])\/202[2-9]/gm;
+            const today = new Date();
+            const splitDate = /\//;
             //Regex for the verification of the UE
-            const verifUE = /[A-Z]{2,10}[0-9]{0,2}[A-Z]{0,1}[0-9]{0,1}/;
+            const verifUE = /[A-Z]{2,10}[0-9]{0,2}[A-Z]{0,1}[0-9]{0,1}/gm;
             //Ask the user to enter two dates and the UE, the answers are stored in response
             const response = await prompts ([
                 {
                     type : 'text',
                     name : 'dateDebut',
                     message : "rentrer la date de début (DD/MM/YYYY)",
-                    validate : dateDebut => !dateDebut.match(verifDate) ? "date pas bonne" : true
+                    validate : dateDebut => {
+                        let d = dateDebut.split(splitDate);
+                        let jourD = d.shift();
+                        let moisD = d.shift()-1;
+                        let anneeD = d.shift();
+                        d = new Date(anneeD, moisD, jourD);
+                        if (!dateDebut.match(verifDate)) {
+                            return "la date n'est pas au bon format"; 
+                        } else if (d < today) {
+                            return "la date doit être supérieur à celle d'aujourd'hui";
+                        } else {
+                            return true; 
+                        };
+                    }
                 },
                 {
                     type : 'text',
@@ -68,6 +87,7 @@ class Actions{
                     separator : ','
                 }
             ]);
+
             //Initialisation of all the var that we need to get each UE
             let tabUE = [];
             let creneau = [];
@@ -185,11 +205,11 @@ class Actions{
                     }
                 });
             });
+
             /** 
              * Retrieves the dates entered by the user and puts them in javascript Date format
              * return dateFin and dateDebut  
              */
-            const splitDate = /\//;
             response.dateDebut = response.dateDebut.split(splitDate);
             let jourD = response.dateDebut.shift();
             let moisD = response.dateDebut.shift()-1;
@@ -202,6 +222,11 @@ class Actions{
             let dateFin = new Date(anneeF, moisF, jourF);
             let jourFin = dateFin.getDate()
             dateFin.setDate(jourFin+1);
+
+            //if dateDebut is after dateFin, warn the user
+            if (dateDebut > dateFin) {
+                return logger.error("La date de début ne peux pas être après la date de fin");
+            }
 
             /**
              * store in arrayChoice the list of EU schedules selected
@@ -237,10 +262,10 @@ class Actions{
                 select.choices = e;
                 multi.push(select);
             });
-
+            
             //ask the user to select every schedule in wich he participates and store the answer 
             //store the coresponding index in response2
-            const response2 = await prompts (multi);            
+            const response2 = await prompts (multi);
                     
             /** 
              * Sorts through the EU slots, keeping only those selected by the user
@@ -282,15 +307,18 @@ class Actions{
 
             
             /**
-            * Beginning of the iCalendar
-            */
+             * Beginning of the iCalendar
+             */
             const calendar = ical({name : 'agenda UE'});
             let nomJourDebut = getDayOfWeek(dateDebut);
 
-
+            /** 
+             * for each UE in tabIcalendar
+             */
             tabIcalendar.forEach(ical => {
                 let nomUE = ical.nomUE;
 
+                //for each schedules, in the UE, and while the schedule is between the beginning and ending date, create a new event
                 ical.creneau.forEach(c => {                      
                     while (dateDebut < c.heureD && c.heureD < dateFin) {
                         switch (c.jour) {
@@ -389,7 +417,7 @@ class Actions{
                     end : fin,
                     summary : type+' de '+nom,
                     desciption : type+" de "+nom+" le Lundi",
-                    localisation : salle
+                    location : salle
                 })
             }
 
