@@ -103,6 +103,8 @@ class Actions{
             let jour;
             let heureD;
             let heureF;
+            let groupe;
+
             //loop for each room
             parser.listeSalle.forEach(salle => {
                 //store the name of the room
@@ -143,6 +145,7 @@ class Actions{
                         //if the lesson schedule exist
                         if(c !== undefined) {
                             //if the UE corresponds with one of those entered by the user
+                            groupe = c.type;
                             if (response.UE.includes(c.nomUE)) {
                                 typeCours = c.type;
                                 if (typeCours.includes("C")) {
@@ -155,7 +158,7 @@ class Actions{
                                 nomUE = c.nomUE;
                                 creneau = [];
                                 //create an object with the name of the room, day, start and end time                               
-                                objCreneau = {nomSalle, jour, heureD, heureF, typeCours};
+                                objCreneau = {nomSalle, jour, heureD, heureF, typeCours, groupe};
                                 //object that stores the EU name and a array who will receive objCreneau.
                                 horaire = {nomUE, creneau};
 
@@ -171,10 +174,11 @@ class Actions{
                                 //Checks if the unit being processed already exists in the tabUE table
                                 } else if (tabUE.some(exist)) {
                                     //test to see if the slot fits
-                                    const verifCreneau = (e) => e.nomSalle === objCreneau.nomSalle && e.jour === objCreneau.jour && e.heureF === objCreneau.heureD;
+                                    const verifCreneau = (e) => e.nomSalle === objCreneau.nomSalle && e.jour === objCreneau.jour && e.heureF === objCreneau.heureD && e.groupe === objCreneau.groupe;
                                     //retrieves the index of the corresponding slot if it exists.
                                     let indiceCreneau = tabUE[indice].creneau.findIndex(verifCreneau);
-                                    
+                                    // console.log(tabUE[indice]);
+
                                     //if the slot exists
                                     if (tabUE[indice].creneau.some(verifCreneau)) {
                                         //add half an hour to the end time
@@ -462,6 +466,7 @@ class Actions{
             http.createServer((req, res) => calendar.serve(res))
                 .listen(3000, '127.0.0.1', () => {
                     console.log('Server running at http://127.0.0.1:3000/');
+                    console.log('Ctrl + c pour fermer');
                     open('http://127.0.0.1:3000/');
                 });
         })();
@@ -590,6 +595,7 @@ class Actions{
 			logger.info(data);
 		});
     }
+
     static displaydispo = function({logger, args}){
             const expressionsalle = /[A-Z][0-9]{3}/;
             if(!String(args.room).match(expressionsalle))
