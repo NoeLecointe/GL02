@@ -587,6 +587,131 @@ class Actions{
 			logger.info(data);
 		});
     }
+    static displaydispo = function({logger, args}){
+            const expressionsalle = /[A-Z][0-9]{3}/;
+            if(!String(args.room).match(expressionsalle))
+            {
+                console.log("Erreur avec la salle : lettre majuscule + 3 chiffres")
+                return;
+            }
+            const parseData = new parserGeneral();
+            Actions.parseAll(parseData)
+
+            const jour = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"]
+            console.log("Horaire de disponibilité pour la salle : "+args.room);
+            let salleExistante = false;
+
+            parseData.listeSalle.forEach(salle => {
+                if (salle.nomSalle == args.room)
+                {
+                    salleExistante = true;
+                    //console.log(salle.nomSalle);
+                    //console.log(salle.agenda)
+                    for (let day = 0; day < 7; day++) {
+                        console.log(jour[day]);
+                        console.log("-----------------------------------------------------------------------------------------------------");
+                        console.log("0   1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16  17  18  19  20  21  22  23  24");
+                        let listehoraire = "|"
+                        for (let hour = 0; hour < 48; hour++) {
+                            if (salle.agenda[day][hour] != undefined)
+                            {
+                                listehoraire += "X|"; 
+                            }
+                            else{
+                                listehoraire += " |"; 
+                            }
+                        }
+                        console.log(listehoraire);
+                        console.log("-----------------------------------------------------------------------------------------------------");
+                    }
+                }    
+        })
+        if (!salleExistante)
+        {
+            console.log("La salle demandé n'existe pas")
+        }
+    }
+
+    static viewfreeroom = function({logger, args}){
+            const expressiondate = /[0-3][0-9]\/[0-1][0-9]\/[0-9]{4}/;
+            const expressionhour = /[0-2][0-9]:[0-5][0-9]-[0-2][0-9]:[0-5][0-9]/;
+            if(!String(args.date).match(expressiondate))
+            {
+                console.log("Erreur avec la date, utiliser ce format : JJ/MM/AAAA")
+                return;
+            }
+            if(!String(args.hour).match(expressionhour))
+            {
+                console.log("Erreur avec l'heure, utiliser ce format : HH:MM-HH:MM (1er heure < 2eme heure)")
+                return;
+            }
+            const parseData = new parserGeneral();
+            Actions.parseAll(parseData)
+            const chars = args.date.split('/');
+            const date1 = new Date(chars[2],chars[1]-1,chars[0]);
+            let weekDay = date1.getDay();
+            if (weekDay == 0)
+            {
+                weekDay = 6
+            }
+            else{
+                weekDay -= 1 
+            }
+
+            const jour = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"]
+            const startend = args.hour.split("-")
+            let debut = startend[0].split(":")
+            let fin = startend[1].split(":")
+            let mini = debut[0]*2;
+            let max = fin[0]*2;
+            if (debut[1] >= 30)
+            {
+                mini += 1
+            }
+            if (fin[1] >= 30)
+            {
+                max += 1
+            }
+            
+            let roomlist = []
+            parseData.listeSalle.forEach(salle => {
+                    let dispo = true;
+                    for (let hour = mini; hour < max; hour++) {
+                        if(salle.agenda[weekDay][hour] != undefined)
+                        {   
+                            dispo = false;
+                        }
+                    }
+                    if (dispo === true)
+                        {    
+                            roomlist.push(salle.nomSalle)
+                        }
+                })
+                if(mini%2 == 1)
+                {
+                    debut[1] = "30";
+                }
+                else {
+                    debut[1] = "00"
+                }
+                if(max%2 == 1)
+                {
+                    fin[1] = "30";
+                }
+                else {
+                    fin[1] = "00"
+                }
+                console.log("Liste des salles disponible le "+jour[weekDay]+" entre : "+ debut[0]+":"+debut[1]+" et "+ fin[0]+":"+fin[1]+" (arrondi à 30min)")
+                 if (mini >= max)
+                {
+                    console.log("Erreur avec l'heure, utiliser ce format : HH:MM-HH:MM (1er heure < 2eme heure)")
+                    return;
+                }
+                roomlist.forEach(room => {
+                console.log("- "+room)
+                });
+    }
+
 }
 
 module.exports = Actions;
