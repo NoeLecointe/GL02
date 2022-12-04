@@ -52,7 +52,7 @@ class Parser{
      */
     parse = function(data){
         const regexUE = /^\+([A-Z]{2,10}\d{0,2}[A-Z]?\d?)$/;
-        const regexvaleur = /^1,(T|C|D)\d{1,2},P=\d{1,3},H=((L|MA|ME|J|V|S) ((\d|1\d|2[0-4]):(00|30)-(\d|1\d|2[0-4]):(00|30)),([A-Z][A-Z0-9]),S=([A-Z](\d{3}|[A-Z]{2}(\d|[A-Z])))\/)+\/$/
+        const regexvaleur = /^1,(T|C|D)\d{1,2},P=\d{1,3},H=((L|MA|ME|J|V|S|D) ((\d|1\d|2[0-4]):(00|30)-(\d|1\d|2[0-4]):(00|30)),([A-Z][A-Z0-9]),S=([A-Z](\d{3}|[A-Z]{2}(\d|[A-Z])))\/)+\/$/
         data = this.splitAndFilter(data);
         let valeurUE = "";
         while(true){
