@@ -2,11 +2,14 @@ const fs = require('fs');
 const parserUeSalle = require('./parserUeSalle.js');
 const parserGeneral = require('./Parser.js');
 const path = require('path');
-
+const vega = require('vega');
+const lite = require('vega-lite');
+const open = require('open');
+const express = require('express');
 const prompts = require('prompts');
 const ical = require('ical-generator');
 const http = require('http');
-const open = require('open');
+var app = express();
 
 
 
@@ -632,86 +635,145 @@ class Actions{
         }
     }
 
+    /**
+     * Function that make a percentage from the use of every room.
+     * Then create a graph of those percentage and open it on your browser.
+     */
+     static tauxOccupation(){
+        let parser = new parserGeneral();
+        Actions.parseAll(parser);
+
+        var dataRecup = {
+            values : []
+        };
+
+        // get every percentage from every room and addit to a data
+        parser.listeSalle.forEach(element => {
+            let cpt = 0;
+            let nSalle = element.nomSalle
+            element.agenda.forEach(tab =>{
+                tab.forEach(valeur => {
+                    if(valeur != undefined){
+                        cpt++;
+                    }
+                });
+            })
+            let result = (cpt /(7*48))*100;
+            result = result.toFixed(2);
+            dataRecup.values.push({NomSalle: nSalle, Pourcentage: result});
+            
+        });
+
+        // create the VegaLite objet from previous to create a SVG
+        var yourVlSpec = {
+          $schema: 'https://vega.github.io/schema/vega-lite/v2.0.json',
+          description: 'Graphique du taux d\'occupation des salles',
+          data: dataRecup,
+          mark: 'bar',
+          encoding: {
+            x: {field: 'NomSalle', type: 'ordinal'},
+            y: {field: 'Pourcentage', type: 'quantitative'}
+          }
+        };
+        let vegaspec = lite.compile(yourVlSpec).spec
+        var view = new vega.View(vega.parse(vegaspec), {renderer: "none"})
+        // create the SVG
+        view.toSVG()
+          .then(function(svg) {
+            app.get('/', function(req, res){
+              res.send(svg);
+            });
+            // open it on a server at http://127.0.0.1:3000/ so that it will open on your browser
+            app.listen(3000,"127.0.0.1",()=> {
+                open("http://127.0.0.1:3000/");
+                console.log("ctrl+C to finsh");
+            });
+        
+          })
+          .catch(function(err) { console.error(err); });
+
+          
+    }
+
     static viewfreeroom = function({logger, args}){
-            const expressiondate = /[0-3][0-9]\/[0-1][0-9]\/[0-9]{4}/;
-            const expressionhour = /[0-2][0-9]:[0-5][0-9]-[0-2][0-9]:[0-5][0-9]/;
-            if(!String(args.date).match(expressiondate))
+        const expressiondate = /[0-3][0-9]\/[0-1][0-9]\/[0-9]{4}/;
+        const expressionhour = /[0-2][0-9]:[0-5][0-9]-[0-2][0-9]:[0-5][0-9]/;
+        if(!String(args.date).match(expressiondate))
+        {
+            console.log("Erreur avec la date, utiliser ce format : JJ/MM/AAAA")
+            return;
+        }
+        if(!String(args.hour).match(expressionhour))
+        {
+            console.log("Erreur avec l'heure, utiliser ce format : HH:MM-HH:MM (1er heure < 2eme heure)")
+            return;
+        }
+        const parseData = new parserGeneral();
+        Actions.parseAll(parseData)
+        const chars = args.date.split('/');
+        const date1 = new Date(chars[2],chars[1]-1,chars[0]);
+        let weekDay = date1.getDay();
+        if (weekDay == 0)
+        {
+            weekDay = 6
+        }
+        else{
+            weekDay -= 1 
+        }
+
+        const jour = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"]
+        const startend = args.hour.split("-")
+        let debut = startend[0].split(":")
+        let fin = startend[1].split(":")
+        let mini = debut[0]*2;
+        let max = fin[0]*2;
+        if (debut[1] >= 30)
+        {
+            mini += 1
+        }
+        if (fin[1] >= 30)
+        {
+            max += 1
+        }
+        
+        let roomlist = []
+        parseData.listeSalle.forEach(salle => {
+                let dispo = true;
+                for (let hour = mini; hour < max; hour++) {
+                    if(salle.agenda[weekDay][hour] != undefined)
+                    {   
+                        dispo = false;
+                    }
+                }
+                if (dispo === true)
+                    {    
+                        roomlist.push(salle.nomSalle)
+                    }
+            })
+            if(mini%2 == 1)
             {
-                console.log("Erreur avec la date, utiliser ce format : JJ/MM/AAAA")
-                return;
+                debut[1] = "30";
             }
-            if(!String(args.hour).match(expressionhour))
+            else {
+                debut[1] = "00"
+            }
+            if(max%2 == 1)
+            {
+                fin[1] = "30";
+            }
+            else {
+                fin[1] = "00"
+            }
+            console.log("Liste des salles disponible le "+jour[weekDay]+" entre : "+ debut[0]+":"+debut[1]+" et "+ fin[0]+":"+fin[1]+" (arrondi à 30min)")
+             if (mini >= max)
             {
                 console.log("Erreur avec l'heure, utiliser ce format : HH:MM-HH:MM (1er heure < 2eme heure)")
                 return;
             }
-            const parseData = new parserGeneral();
-            Actions.parseAll(parseData)
-            const chars = args.date.split('/');
-            const date1 = new Date(chars[2],chars[1]-1,chars[0]);
-            let weekDay = date1.getDay();
-            if (weekDay == 0)
-            {
-                weekDay = 6
-            }
-            else{
-                weekDay -= 1 
-            }
-
-            const jour = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"]
-            const startend = args.hour.split("-")
-            let debut = startend[0].split(":")
-            let fin = startend[1].split(":")
-            let mini = debut[0]*2;
-            let max = fin[0]*2;
-            if (debut[1] >= 30)
-            {
-                mini += 1
-            }
-            if (fin[1] >= 30)
-            {
-                max += 1
-            }
-            
-            let roomlist = []
-            parseData.listeSalle.forEach(salle => {
-                    let dispo = true;
-                    for (let hour = mini; hour < max; hour++) {
-                        if(salle.agenda[weekDay][hour] != undefined)
-                        {   
-                            dispo = false;
-                        }
-                    }
-                    if (dispo === true)
-                        {    
-                            roomlist.push(salle.nomSalle)
-                        }
-                })
-                if(mini%2 == 1)
-                {
-                    debut[1] = "30";
-                }
-                else {
-                    debut[1] = "00"
-                }
-                if(max%2 == 1)
-                {
-                    fin[1] = "30";
-                }
-                else {
-                    fin[1] = "00"
-                }
-                console.log("Liste des salles disponible le "+jour[weekDay]+" entre : "+ debut[0]+":"+debut[1]+" et "+ fin[0]+":"+fin[1]+" (arrondi à 30min)")
-                 if (mini >= max)
-                {
-                    console.log("Erreur avec l'heure, utiliser ce format : HH:MM-HH:MM (1er heure < 2eme heure)")
-                    return;
-                }
-                roomlist.forEach(room => {
-                console.log("- "+room)
-                });
-    }
-
+            roomlist.forEach(room => {
+            console.log("- "+room)
+            });
+}
 }
 
 module.exports = Actions;

@@ -22,5 +22,7 @@ program
 .command("viewfreeroom", "Get a list of rooms available for time slot")
 .argument("<date>","Date time slot")
 .argument("<hour>","Hour time slot")
-.action(Actions.viewfreeroom);
+.action(Actions.viewfreeroom)
+.command("occupancyRate", "print a diagram of the occupancy rate for every room")
+.action(Actions.tauxOccupation);
 program.run();
