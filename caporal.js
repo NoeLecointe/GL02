@@ -11,5 +11,7 @@ program
 .action(Actions.actionUeSalle)
 .command("getcap", "Get the max capacity of a room")
 .argument("<room>","Name of the room")
-.action(Actions.actionCapacity);
+.action(Actions.actionCapacity)
+.command("test", "test")
+.action(Actions.tauxOccupation);
 program.run();

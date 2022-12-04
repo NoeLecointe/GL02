@@ -2,7 +2,11 @@ const fs = require('fs');
 const parserUeSalle = require('./parserUeSalle.js');
 const parserGeneral = require('./Parser.js');
 const path = require('path');
-
+const vega = require('vega');
+const lite = require('vega-lite');
+const open = require('open');
+const express = require('express');
+var app = express();
 
 
 class Actions{
@@ -117,6 +121,68 @@ class Actions{
     } else {
         console.log("Room not found because of wrong syntax for the name of the room");
     }});
+    }
+
+
+    
+    /**
+     * Function that make a percentage from the use of every room.
+     * Then create a graph of those percentage and open it on your browser.
+     */
+    static tauxOccupation(){
+        let parser = new parserGeneral();
+        Actions.parseAll(parser);
+
+        var dataRecup = {
+            values : []
+        };
+
+        // get every percentage from every room and addit to a data
+        parser.listeSalle.forEach(element => {
+            let cpt = 0;
+            let nSalle = element.nomSalle
+            element.agenda.forEach(tab =>{
+                tab.forEach(valeur => {
+                    if(valeur != undefined){
+                        cpt++;
+                    }
+                });
+            })
+            let result = (cpt /(7*48))*100;
+            result = result.toFixed(2);
+            dataRecup.values.push({NomSalle: nSalle, Pourcentage: result});
+            
+        });
+
+        // create the VegaLite objet from previous to create a SVG
+        var yourVlSpec = {
+          $schema: 'https://vega.github.io/schema/vega-lite/v2.0.json',
+          description: 'Graphique du taux d\'occupation des salles',
+          data: dataRecup,
+          mark: 'bar',
+          encoding: {
+            x: {field: 'NomSalle', type: 'ordinal'},
+            y: {field: 'Pourcentage', type: 'quantitative'}
+          }
+        };
+        let vegaspec = lite.compile(yourVlSpec).spec
+        var view = new vega.View(vega.parse(vegaspec), {renderer: "none"})
+        // create the SVG
+        view.toSVG()
+          .then(function(svg) {
+            app.get('/', function(req, res){
+              res.send(svg);
+            });
+            // open it on a server at http://127.0.0.1:3000/ so that it will open on your browser
+            app.listen(3000,"127.0.0.1",()=> {
+                open("http://127.0.0.1:3000/");
+                console.log("ctrl+C to finsh");
+            });
+        
+          })
+          .catch(function(err) { console.error(err); });
+
+          
     }
 }
 
