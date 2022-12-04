@@ -50,3 +50,15 @@ Les informations demandées sont :
 <argument> : Pas d'argument
 
 Exemple : node caporal.js makeiCalendar
+
+**************************************
+
+<command> : occupancyRate 
+
+Ouvre un graphe correspondant aux pourcentage d'occupation de chaque salle.
+
+<argument> : Pas d'argument
+
+Exemple : node caporal.js occupancyRate 
+
+**************************************
