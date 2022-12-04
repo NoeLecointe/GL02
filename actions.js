@@ -596,26 +596,35 @@ class Actions{
 		});
     }
 
+    /**
+     * Function that display the schedule of a room in args
+     */
     static displaydispo = function({logger, args}){
-            const expressionsalle = /[A-Z][0-9]{3}/;
+
+            //check the args format
+            const expressionsalle = /([A-Z][0-9]{3})|([A-Z]{3}[0-9])|([A-Z]{4})/;
             if(!String(args.room).match(expressionsalle))
             {
-                console.log("Erreur avec la salle : lettre majuscule + 3 chiffres")
+                console.log("Room error ((ALPHA + 3DIGIT) ou (3ALPHA + DIGIT) ou 4ALPHA)")
                 return;
             }
+
+            //get parsed data
             const parseData = new parserGeneral();
             Actions.parseAll(parseData)
 
-            const jour = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"]
-            console.log("Horaire de disponibilité pour la salle : "+args.room);
+            //setup display
+            const jour = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
+            console.log("Room availability : "+args.room);
+
+            //used if the room isn't found
             let salleExistante = false;
 
+            //browse all rooms and when it find the searched room, browse the days and hours to display his schedule
             parseData.listeSalle.forEach(salle => {
                 if (salle.nomSalle == args.room)
                 {
                     salleExistante = true;
-                    //console.log(salle.nomSalle);
-                    //console.log(salle.agenda)
                     for (let day = 0; day < 7; day++) {
                         console.log(jour[day]);
                         console.log("-----------------------------------------------------------------------------------------------------");
@@ -635,9 +644,11 @@ class Actions{
                     }
                 }    
         })
+
+        //explain the user why nothing is displayed
         if (!salleExistante)
         {
-            console.log("La salle demandé n'existe pas")
+            console.log("This room doesn't exist")
         }
     }
 
@@ -700,24 +711,34 @@ class Actions{
 
           
     }
-
+    /**
+     * Function that display the list of rooms available for a day and time-slot
+     */
     static viewfreeroom = function({logger, args}){
+
+        //check the args format
         const expressiondate = /[0-3][0-9]\/[0-1][0-9]\/[0-9]{4}/;
         const expressionhour = /[0-2][0-9]:[0-5][0-9]-[0-2][0-9]:[0-5][0-9]/;
         if(!String(args.date).match(expressiondate))
         {
-            console.log("Erreur avec la date, utiliser ce format : JJ/MM/AAAA")
+            console.log("Date error (DD/MM/YYYY)")
             return;
         }
         if(!String(args.hour).match(expressionhour))
         {
-            console.log("Erreur avec l'heure, utiliser ce format : HH:MM-HH:MM (1er heure < 2eme heure)")
+            console.log("Hour error (HH:MM-HH:MM, 1st hour < 2nd hour)")
             return;
         }
+
+        //get parsed data
         const parseData = new parserGeneral();
         Actions.parseAll(parseData)
+
+        //convert date DD/MM/YYYY to date object
         const chars = args.date.split('/');
         const date1 = new Date(chars[2],chars[1]-1,chars[0]);
+
+        //get the day of week starting by monday
         let weekDay = date1.getDay();
         if (weekDay == 0)
         {
@@ -726,11 +747,14 @@ class Actions{
         else{
             weekDay -= 1 
         }
+        const jour = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
 
-        const jour = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"]
+        //separate the start and the end of the time-slot
         const startend = args.hour.split("-")
         let debut = startend[0].split(":")
         let fin = startend[1].split(":")
+
+        //convert HH:MM to a number of half hour
         let mini = debut[0]*2;
         let max = fin[0]*2;
         if (debut[1] >= 30)
@@ -742,10 +766,13 @@ class Actions{
             max += 1
         }
         
-        let roomlist = []
+        //initiate the list of room displayed
+        let roomlist = ""
+        let first = true
         parseData.listeSalle.forEach(salle => {
                 let dispo = true;
                 for (let hour = mini; hour < max; hour++) {
+                    //check if the room have something planned during the timeslot
                     if(salle.agenda[weekDay][hour] != undefined)
                     {   
                         dispo = false;
@@ -753,7 +780,16 @@ class Actions{
                 }
                 if (dispo === true)
                     {    
-                        roomlist.push(salle.nomSalle)
+                        //add the available room to the list and test if this is the first element of the list
+                        if(first)
+                        {
+                            roomlist += "- "+salle.nomSalle 
+                            first = false
+                        }
+                        else 
+                        {
+                            roomlist += ", "+salle.nomSalle 
+                        }
                     }
             })
             if(mini%2 == 1)
@@ -770,15 +806,14 @@ class Actions{
             else {
                 fin[1] = "00"
             }
-            console.log("Liste des salles disponible le "+jour[weekDay]+" entre : "+ debut[0]+":"+debut[1]+" et "+ fin[0]+":"+fin[1]+" (arrondi à 30min)")
+            //display the result of the research
+            console.log("List of rooms available on "+jour[weekDay]+" between : "+ debut[0]+":"+debut[1]+" and "+ fin[0]+":"+fin[1]+" (rounded at 30 min)")
              if (mini >= max)
             {
-                console.log("Erreur avec l'heure, utiliser ce format : HH:MM-HH:MM (1er heure < 2eme heure)")
+                console.log("Hour error (HH:MM-HH:MM, 1st hour < 2nd hour)")
                 return;
             }
-            roomlist.forEach(room => {
-            console.log("- "+room)
-            });
+            console.log(roomlist)           
 }
 }
 

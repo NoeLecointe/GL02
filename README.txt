@@ -62,3 +62,23 @@ Ouvre un graphe correspondant aux pourcentage d'occupation de chaque salle.
 Exemple : node caporal.js occupancyRate 
 
 **************************************
+
+<command> : displaydispo
+
+Affiche tout les créneaux de 30 minutes d'une salle pour une semaine type
+
+<argument> : <Nom_de_la_salle> Une lettre majuscule et 3 chiffres
+
+Exemple : node caporal.js displaydispo B103
+
+**************************************
+
+<command> : viewfreeroom
+
+Affiche toutes les salles disponible durant un créneau pour un jour donné (horaires arrondi à la demi-heure)
+
+<argument> : <date> JJ/MM/AAAA <2_horaires> HH:MM-HH:MM
+
+Exemple : node caporal.js viewfreeroom 01/12/2022 10:25-18:47
+
+**************************************
