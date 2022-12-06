@@ -56,6 +56,8 @@ Exemple : node caporal.js makeiCalendar
 <command> : occupancyRate 
 
 Ouvre un graphe correspondant aux pourcentage d'occupation de chaque salle.
+L'affichage se faire grâce à un serveur en local ouvert sur votre port 3000.
+Si jamais rien ne s'affiche, vérifier que votre 3000 est bien ouvert. 
 
 <argument> : Pas d'argument
 
@@ -65,7 +67,8 @@ Exemple : node caporal.js occupancyRate
 
 <command> : displaydispo
 
-Affiche tout les créneaux de 30 minutes d'une salle pour une semaine type
+Affiche tout les créneaux de 30 minutes d'une salle pour une semaine type.
+Une croix signifie que la salle est occupée.
 
 <argument> : <Nom_de_la_salle> Une lettre majuscule et 3 chiffres
 

@@ -10,5 +10,9 @@
     "prompts": "^2.4.2",
     "vega": "^5.22.1",
     "vega-lite": "^5.6.0"
-  }
+  },
+  "devDependencies": {
+    "jasmine": "^4.5.0"
+  },
+  "scripts": { "test": "jasmine"}
 }
