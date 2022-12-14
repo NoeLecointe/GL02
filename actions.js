@@ -545,6 +545,7 @@ class Actions{
 
 
     static actionCapacity = function({logger, args}){
+        args.room = args.room.toUpperCase()
         let allData;
         const directoryPath = path.join('.','SujetA_data');
 
@@ -560,26 +561,28 @@ class Actions{
             //need check if the user give a good syntax for the room name as argument
             const expressionsalle2 = /[A-Z][0-9]{3}|[A-Z]{3}[0-9]|[A-Z]{4}/;
             if (String(args.room).match(expressionsalle2)){
-            //instance of the parser, to get the block of data needed for spec 3
-            var analyzer2 = new parserUeSalle();
-            analyzer2.parse(allData,String(args.room),3);
-            const expressioncapacity = /P=[0-9]{1,3}/;
-            let capacity = 0;
-            let stringcap;
-            //if the parser didn't find any information about the room
-            if (typeof analyzer2.searched[0] === 'undefined'){ 
-                console.log("Room not found on the data base or wrong syntax for the name of the room, please write the room name with uppercase");
-            } else {
-                //selecting each number of place linked with the room
-                analyzer2.searched.forEach(function(cap) {
-                    stringcap = cap.match(expressioncapacity);
-                    //keeping only the biggest number of place on the variable capacity after removing the "P=" on the string of the capacity and then convert on int to use the math.max which keep the bigger number
-                    capacity = Math.max(capacity,parseInt(String(stringcap).substring(2)));
-                
-                    })
-                    logger.info("The max capacity of the room %s is %s", args.room, String(capacity));
+                //instance of the parser, to get the block of data needed for spec 3
+                var analyzer2 = new parserUeSalle();
+                analyzer2.parse(allData,String(args.room),3);
+                const expressioncapacity = /P=[0-9]{1,3}/;
+                let capacity = 0;
+                let stringcap;
+                //if the parser didn't find any information about the room
+                if (typeof analyzer2.searched[0] === 'undefined'){ 
+                    console.log("Room not found on the data base or wrong syntax for the name of the room, please write the room name with uppercase");
+                } 
+                else {
+                    //selecting each number of place linked with the room
+                    analyzer2.searched.forEach(function(cap) {
+                        stringcap = cap.match(expressioncapacity);
+                        //keeping only the biggest number of place on the variable capacity after removing the "P=" on the string of the capacity and then convert on int to use the math.max which keep the bigger number
+                        capacity = Math.max(capacity,parseInt(String(stringcap).substring(2)));
+                    
+                        })
+                        logger.info("The max capacity of the room %s is %s", args.room, String(capacity));
                 }
-            } else {
+            } 
+            else {
                 console.log("Room not found because of wrong syntax for the name of the room, please write the room name with uppercase");
             }
         });
