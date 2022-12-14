@@ -63,9 +63,9 @@ class Parser{
             else if(valeur.match(regexvaleur)){
                 this.createCreneau(valeur,valeurUE);
             }
-            else{
-                console.log("Parsing Error ! on : \""+valeur+"\" -- msg : "+ "value doesn't respect the format");
-            }
+            // else{
+            //     console.log("Parsing Error ! on : \""+valeur+"\" -- msg : "+ "value doesn't respect the format");
+            // }
             if(data.length <= 0){
                 break; 
             }
