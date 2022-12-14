@@ -87,7 +87,9 @@ class Actions{
                     type : 'list',
                     name : 'UE',
                     message : 'entrer vos UE (en majuscule) séparées par une ","',
-                    separator : ','
+                    separator : ',',
+                    validate : UE => UE != UE.toUpperCase() ? "format de l'ue mauvais" : true
+
                 }
             ]);
 
