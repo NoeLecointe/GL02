@@ -61,7 +61,7 @@ class Actions{
                 {
                     type : 'text',
                     name : 'dateDebut',
-                    message : "rentrer la date de début (DD/MM/YYYY)",
+                    message : "entrer la date de début (DD/MM/YYYY)",
                     validate : dateDebut => {
                         let d = dateDebut.split(splitDate);
                         let jourD = d.shift();
@@ -375,7 +375,7 @@ class Actions{
                                 }
                                 break;
                             case "Samedi":
-                                if (nomJourDebut === 'vendredi') {
+                                if (nomJourDebut === 'samedi') {
                                     nomJourDebut = "";
                                     creationEvent(c.heureD, c.heureF, c.typeCours, nomUE, c.nomSalle);
                                 } else {
@@ -706,7 +706,7 @@ class Actions{
             // open it on a server at http://127.0.0.1:3000/ so that it will open on your browser
             app.listen(3000,"127.0.0.1",()=> {
                 open("http://127.0.0.1:3000/");
-                console.log("ctrl+C to finsh");
+                console.log("ctrl+C to finish");
             });
         
           })
