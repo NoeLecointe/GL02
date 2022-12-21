@@ -476,6 +476,7 @@ class Actions{
 
     static actionUeSalle = function({logger, args}){
         let pathdata;
+        args.ue = args.ue.toUpperCase();
         //Take the first letter of the arugment of the command which is the first letter of the ue name 
         const firstLetter = String(args.ue).substring(0,1);
         //each ue is on the directory depending of the alphabet of the ue name, the switch case give the good directory depending of the first letter of the ue searched for the path
