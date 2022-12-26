@@ -608,6 +608,8 @@ class Actions{
     static displaydispo = function({logger, args}){
 
             //check the args format
+            args.room = args.room.toUpperCase();
+
             const expressionsalle = /([A-Z][0-9]{3})|([A-Z]{3}[0-9])|([A-Z]{4})/;
             if(!String(args.room).match(expressionsalle))
             {
