@@ -682,22 +682,32 @@ class Actions{
             })
             let result = (cpt /(7*48))*100;
             result = result.toFixed(2);
-            dataRecup.values.push({NomSalle: nSalle, Pourcentage: result});
+            dataRecup.values.push({"Nom Salle": nSalle, Pourcentage: result});
             
         });
 
         // create the VegaLite objet from previous to create a SVG
-        var yourVlSpec = {
+        var vegaspec = lite.compile({
           $schema: 'https://vega.github.io/schema/vega-lite/v2.0.json',
           description: 'Graphique du taux d\'occupation des salles',
           data: dataRecup,
           mark: 'bar',
           encoding: {
-            x: {field: 'NomSalle', type: 'ordinal'},
-            y: {field: 'Pourcentage', type: 'quantitative'}
-          }
-        };
-        let vegaspec = lite.compile(yourVlSpec).spec
+            x: {field: 'Nom Salle', type: 'ordinal'},
+            y: {field: 'Pourcentage', type: 'quantitative'},
+            color: {
+                field : 'Pourcentage',
+                type : "quantitative",
+                legend: {
+                    title: null
+                },
+                scale: {
+                    domain : [0,5,10,15,20,25,30],
+                    range : ["#0e7735","#52b264","#95fb51","#dedd32","#ffa423","#f65f18","#ba2208"]
+                }
+          },
+        }
+        }).spec;
         var view = new vega.View(vega.parse(vegaspec), {renderer: "none"})
         // create the SVG
         view.toSVG()
