@@ -2,6 +2,10 @@
 
 Description : Le logiciel a pour but de faciliter la gestion des locaux de l'université centrale de la république de Sealand ainsi que l'organisation de ses usagers qui sont les enseignants et les étudiants.
 
+## Requirements
+
+To ensure that the program is running on your computer, it is preferable to have installed [node.js](https://nodejs.org/fr/download/). Having used Vegalite packages to implement this project, they can be reinstalled if they do not work. To use the parser, it is necessary to install its dependancies with the command ```npm install```.
+
 ### Utilisation :
 
 $ node caporal.js <command> <argument>
@@ -85,3 +89,11 @@ Affiche toutes les salles disponible durant un créneau pour un jour donné (hor
 Exemple : node caporal.js viewfreeroom 01/12/2022 10:25-18:47
 
 **************************************
+
+## Auteurs
+
+The difference authors of this project are : Noé Lecointe, Kilian Froge, Théo Cecille, Tony Gong, Julian Marques, Valentin Cabot-Bouchentouf, Tristan Jogee et David Bounliane.
+
+## Licence
+
+Licence MIT
