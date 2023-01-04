@@ -2,8 +2,24 @@
 
 Description: The software is used to manage the classrooms and organize the users (teachers and students) of the Central University of the Republic of Sealand.
 
+
+## Sommaire
+
+1. [Requirements](#Requirements)
+2. [Utilisation](#Utilisation)
+3. [Functions](#Functions)
+
+
+## Requirements
+
+To ensure that the program is running on your computer, it is preferable to have installed [node.js](https://nodejs.org/fr/download/). Having used Vegalite and Vcards packages to implement this project, they can be reinstalled if they do not work. To use the parser, it is necessary to install its dependancies with the command ```npm install```.
+
+
 ## Utilisation:
 $ node caporal.js <command> <argument>
+
+
+##Functions
 
 ---
 
@@ -74,3 +90,12 @@ $ node caporal.js <command> <argument>
 **Arguments:** The date (in the format DD/MM/YYYY) followed by two time slots (in the format HH:MM-HH:MM).
 
 **Example:** `node caporal.js viewfreeroom 01/12/2022 10:25-18:47`
+
+
+## Auteurs
+
+The difference authors of this project are : Noé Lecointe, Kilian Froge, Théo Cecille, Tony Gong, Julian Marques, Valentin Cabot-Bouchentouf, Tristan Jogee et David Bounliane.
+
+## Licence
+
+Licence MIT
