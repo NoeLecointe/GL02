@@ -12,7 +12,7 @@ Description: The software is used to manage the classrooms and organize the user
 
 ## Requirements
 
-To ensure that the program is running on your computer, it is preferable to have installed [node.js](https://nodejs.org/fr/download/). Having used Vegalite and Vcards packages to implement this project, they can be reinstalled if they do not work. To use the parser, it is necessary to install its dependancies with the command ```npm install```.
+To ensure that the program is running on your computer, it is preferable to have installed [node.js](https://nodejs.org/fr/download/). Having used Vegalite packages to implement this project, they can be reinstalled if they do not work. To use the parser, it is necessary to install its dependancies with the command ```npm install```.
 
 
 ## Utilisation:
